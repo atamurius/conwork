@@ -1,0 +1,49 @@
+body { padding: .3em .7em; }
+.block {
+  border: thin dashed lightgray;
+  padding: 0;
+}
+.block .content {
+  padding: .3em .5em;
+  margin: 0;
+  white-space: pre-wrap;
+}
+.block .tools {
+  padding-left: .5em;
+  color: lightgray;
+  height: 22px;
+}
+.block .tools .buttons { 
+  display: none;
+}
+.block:hover .tools .buttons { 
+  display: block; 
+}
+.block:hover {
+  background-color: #ffe;
+}
+.block {
+  cursor: text;
+}
+.block textarea {
+  border: none;
+  shadow: none;
+  outline: none;
+  width: 100%;
+  background: transparent;
+  padding: .3em .5em;
+}
+.inserter {
+  font-size: xx-small;
+  text-align: center;
+  color: lightgray;
+}
+.inserter:hover {
+  background: #ffe;
+  cursor: pointer;
+}
+
+
+
+
+
