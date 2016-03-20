@@ -3,9 +3,9 @@
   <head>
     <meta charset="UTF-8" />
     <title>Concurrent Work</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/react/0.14.7/react-dom.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.23/browser.js"></script>
     
     <script   src="https://code.jquery.com/jquery-2.2.2.js"   integrity="sha256-4/zUCqiq0kqxhZIyp4G0Gk+AOtCJsY1TA00k5ClsZYE="   crossorigin="anonymous"></script>
 
@@ -22,6 +22,9 @@
     <link rel="stylesheet" type="text/css" href="style.css">
   </head>
   <body>
-    <script type="text/babel" src="lib.jsx"></script>
+    <div id="content-root"></div>
+    <script type="text/babel" src="lib.js"></script>
+    <script type="text/babel" src="store.js"></script>
+    <script type="text/babel" src="view.jsx"></script>
   </body>
 </html>
