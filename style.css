@@ -21,8 +21,8 @@ body {
   animation: removed .5s ease-out;
 }
 
-.page-header .btn-group {
-  padding-left: 2em;
+.page-header .badge {
+  font-size: 60%;
 }
 
 .container {

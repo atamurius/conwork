@@ -1,23 +1,7 @@
 var {Button,PageHeader,Navbar,Nav,Input,ButtonToolbar,ButtonGroup,
-	Glyphicon,DropdownButton,MenuItem} = ReactBootstrap
+	Glyphicon,DropdownButton,MenuItem,SplitButton} = ReactBootstrap
 
 var {CSSTransitionGroup} = React.addons
-
-let OnlineButton = ({online,update}) => (
-	<Button bsSize="small" 
-		    onClick={() => update(! online)}
-		    active={online}
-		    bsStyle={online ? 'success' : 'danger'}>
-		{online ? 'ON' : 'OFF'}-LINE
-	</Button>
-)
-
-let History = ({undos,redos,onUndo,onRedo}) => (
-	<ButtonGroup bsSize="small">
-		<Button disabled={undos == 0} onClick={onUndo}><Glyphicon glyph="chevron-left" /> Undo {undos > 0 ? <span className="badge">{undos}</span> : ''}</Button>
-		<Button disabled={redos == 0} onClick={onRedo}>Redo {redos > 0 ? <span className="badge">{redos}</span> : ''} <Glyphicon glyph="chevron-right" /></Button>
-	</ButtonGroup>
-)
 
 class TextField extends React.Component {
 	constructor(props) {
@@ -122,6 +106,35 @@ class Root extends React.Component {
 	}
 }
 
+
+let OnlineButton = ({online,update}) => (
+	<Button bsSize="small" 
+		    onClick={() => update(! online)}
+		    active={online}
+		    bsStyle={online ? 'success' : 'danger'}>
+		{online ? 'ON' : 'OFF'}-LINE
+	</Button>
+)
+
+let describeAction = act => {
+	switch (act.type) {
+		case 'CHANGE_NODE_VALUE':
+			return 'Change node value to "'+ act.value.substr(0, 20) +'"'
+		case 'INSERT_NODE_AFTER':
+			return 'Insert new node'
+		case 'REMOVE_NODE':
+			return 'Remove node'
+	}
+}
+
+let HistoryButton = ({events,onClick,children}) => (
+	<SplitButton disabled={events.length == 0} title={children} bsSize="small" onClick={() => onClick(0)}>
+		{events.slice().reverse().map((e,i) => 
+			<MenuItem key={i} onClick={() => onClick(i)}>{describeAction(e.action)}</MenuItem>
+		)}
+	</SplitButton>
+)
+
 class Toolbar extends React.Component {
 	constructor(props) {
 		super(props)
@@ -137,10 +150,14 @@ class Toolbar extends React.Component {
 	render() {
 		return (
 		  	<ButtonToolbar className="pull-right">
-			  	<History undos={this.state.history.length}
-			  			 redos={this.state.future.length}
-			  			 onUndo={this.actions.undo}
-			  			 onRedo={this.actions.redo}/>
+		  		<HistoryButton events={this.state.history} onClick={this.actions.undo}>
+					<Glyphicon glyph="chevron-left" /> 
+					Undo {this.state.history.length > 0 ? <span className="badge">{this.state.history.length}</span> : ''}
+		  		</HistoryButton>
+		  		<HistoryButton events={this.state.future} onClick={this.actions.redo}>
+					Redo {this.state.future.length > 0 ? <span className="badge">{this.state.future.length}</span> : ''}
+					<Glyphicon glyph="chevron-right" /> 
+		  		</HistoryButton>
 			  	<OnlineButton online={true}/>
 		  	</ButtonToolbar>
 		)

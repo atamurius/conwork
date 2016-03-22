@@ -16,11 +16,11 @@ window.Actions = {
         type: 'NODE_ACTION_EXECUTED',
         action, state
     }),
-    undo: () => ({
-        type: 'HISTORY_UNDO'
+    undo: (n = 0) => ({
+        type: 'HISTORY_UNDO', n
     }),
-    redo: () => ({
-        type: 'HISTORY_REDO'
+    redo: (n = 0) => ({
+        type: 'HISTORY_REDO', n
     })
 }
 
@@ -31,6 +31,11 @@ function node(value = '', content = []) {
         id: uniqIdSeq++,
         value, content
     }
+}
+
+window.actionsLog = {
+    actions: [],
+    undoLength: 0
 }
 
 /**
@@ -112,27 +117,27 @@ new Store((state, action, dispatch) => {
             })
         case 'NODE_ACTION_EXECUTED':
             return copy(state, {
-                history: state.history.concat([ { action: action.action, state: action.state } ]),
+                history: state.history.concat([ { action: action.action, before: action.state, after: state.nodes } ]),
                 future: []
             })
-        case 'HISTORY_UNDO':
-            let prev = state.history[ state.history.length - 1 ]
-            let newState = prev.state
-            prev.state = state.nodes
+        case 'HISTORY_UNDO': {
+            let n = state.history.length - action.n - 1
+            let prev = state.history[n]
             return copy(state, {
-                nodes: newState,
-                history: state.history.slice(0,-1),
-                future: state.future.concat([ prev ])
+                nodes: prev.before,
+                history: state.history.slice(0, -action.n - 1),
+                future: state.future.concat( state.history.slice(n).reverse() )
             })
-        case 'HISTORY_REDO':
-            let next = state.future[ state.future.length - 1 ]
-            let oldState = next.state
-            next.state = state.nodes
+        }
+        case 'HISTORY_REDO': {
+            let n = state.future.length - action.n - 1
+            let next = state.future[n]
             return copy(state, {
-                nodes: oldState,
-                history: state.history.concat([ next ]),
-                future: state.future.slice(0,-1)
+                nodes: next.after,
+                history: state.history.concat( state.future.slice(n).reverse() ),
+                future: state.future.slice(0,-action.n - 1)
             })
+        }
 		default:
 			return state
 	}
