@@ -1,12 +1,28 @@
-body { padding: .3em .7em; }
+body { 
+  padding: .3em .7em; 
+}
+#content-root { margin: 0 auto; }
 
-@keyframes changed {
-    0% { background-color: #ff0; }
-  100% { background-color: #fff; }
+@keyframes added {
+    0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-.changed {
-  animation: changed 1s ease-out;
+@keyframes removed {
+    0% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+.block.block-enter {
+  animation: added .5s ease-out;
+}
+
+.block.block-leave {
+  animation: removed .5s ease-out;
+}
+
+.page-header .btn-group {
+  padding-left: 2em;
 }
 
 .container {
@@ -14,19 +30,26 @@ body { padding: .3em .7em; }
   padding: 0;
   margin: 0;
 }
-.block .container {
-  padding: 0 .5em;
+.block .items {
+  padding: 0 .5em 0 3em;
+  border-top: thin dashed #eee;
 }
 .block {
-  border: thin dashed #eee;
+  border: thin solid lightgray;
+  border-left: 5px solid #7af;
   padding: 0;
-  margin: .2em 0;
+  margin: .3em 0;
+  box-shadow: 2px 2px 5px #ccc;
 }
-.block:hover {
-  border: thin dashed lightgray;
-}
+.block { background-color: #fafafa; }
+.block .block { background-color: #f3f3f3; }
+.block .block .block { background-color: #eaeaea; }
+.block .block .block .block { background-color: #e3e3e3; }
+.block .block .block .block .block { background-color: #dadada; }
+.block .block .block .block .block .block { background-color: #d3d3d3; }
+
 .block .content {
-  padding: .3em .5em;
+  padding: .5em .7em;
   margin: 0;
   white-space: pre-wrap;
 }
@@ -34,32 +57,10 @@ body { padding: .3em .7em; }
   color: lightgray;
   font-style: italic;
 }
-.container > .content,
-.container > textarea {
-  font-size: larger;
-  font-weight: bold;
-}
 .block .tools {
   padding-left: .5em;
   color: lightgray;
   height: 22px;
-}
-.block > .tools a {
-  opacity: .3;
-}
-.block:hover > .tools a {
-  opacity: 1;
-}
-.block.container > .tools .dropdown:before {
-  content: '';
-}
-.block > .tools .dropdown:before {
-  content: '§ ';
-}
-.block.ul > .container > div > .block > .tools .dropdown:before {
-  content: '— ';
-  color: black;
-  margin-left: -1em;
 }
 .block.ul > .container > div > .block {
   padding-left: 1em;
@@ -71,7 +72,16 @@ body { padding: .3em .7em; }
 .block:hover > .tools .buttons { 
   display: block; 
 }
-.block .tools .buttons .glyphicon:hover {
+.block .glyphicon {
+  float: right;
+  color: lightgray;
+  padding: .2em .2em 0 0;
+  opacity: 0;
+}
+.block:hover > .glyphicon {
+  opacity: 1;
+}
+.block .glyphicon:hover {
   cursor: pointer;
   color: black;
 }
@@ -86,7 +96,7 @@ body { padding: .3em .7em; }
   shadow: none;
   outline: none;
   width: 100%;
-  background: transparent;
+  background-color: #ffe;
   padding: .3em .5em;
 }
 .inserter {

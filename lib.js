@@ -29,10 +29,11 @@ class Store {
 	process() {
 		if (! this.dispatching) {
 			this.dispatching = true;
+			let dispatch = this.dispatch.bind(this);
 			try {
 				while (this.queue.length) {
 					let action = this.queue.shift();
-					this.state = this.reducer(this.state, action);
+					this.state = this.reducer(this.state, action, dispatch);
 					console.log('Action', action)
 					console.log('State', this.state)
 				}
