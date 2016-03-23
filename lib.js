@@ -7,6 +7,11 @@ class Store {
 		this.dispatching = false;
 		this.listeners = [];
 	}
+	addReducer(reducer) {
+		let current = this.reducer
+		this.reducer = (state, action, dispatch) => 
+			reducer(current(state, action, dispatch), action, dispatch)
+	}
 	dispatch(action) {
 		this.queue.push(action);
 		this.process();
@@ -58,3 +63,4 @@ window.copy = (obj, props) => {
 	for (let p in props) copy[p] = props[p]
 	return copy
 }
+

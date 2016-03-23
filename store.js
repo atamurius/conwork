@@ -24,18 +24,19 @@ window.Actions = {
     })
 }
 
-var uniqIdSeq = 0
+let NODE_ACTIONS = ['CHANGE_NODE_VALUE','INSERT_NODE_AFTER','REMOVE_NODE']
+
+function guid() {
+  let s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
 
 function node(value = '', content = []) {
     return {
-        id: uniqIdSeq++,
+        id: guid(),
         value, content
     }
-}
-
-window.actionsLog = {
-    actions: [],
-    undoLength: 0
 }
 
 /**
@@ -44,60 +45,30 @@ window.actionsLog = {
  *	- value
  *	- content: list of blocks
  */
-window.store = 
-new Store((state, action, dispatch) => {
-	if (typeof state === 'undefined')
-		// initial state
-		return {
-            history: [],
-            future: [],
-            nodes: [
-                node(
-                    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-                ),
-                node(
-                    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.',
-                    [
-                        node(
-                            'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-                        ),
-                        node(
-                            'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-                        ),
-                        node(
-                            'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', [
-                                node(
-                                    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-                                ),
-                                node(
-                                    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-                                )
-                            ]
-                        )
-                    ]
-                ),
-                node(
-                    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-                ),
-                node(
-                    'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.', [
-                        node(
-                            'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.'
-                        )
-                    ]
-                )
-    		]
-        }
-	else switch (action.type) {
+window.store = new Store((state, action, dispatch) => (typeof state !== 'undefined') ? state : {
+    history: [],
+    future: [],
+    nodes: []
+})
+
+/** Record node action initial state */
+window.store.addReducer((state, action, dispatch) => {
+    if (NODE_ACTIONS.indexOf(action.type) !== -1) {
+        dispatch(Actions.nodeAction(action,state.nodes))
+    }
+    return state
+})
+
+/** Nodes actions */
+window.store.addReducer((state, action, dispatch) => {
+	switch (action.type) {
         case 'CHANGE_NODE_VALUE':
-            dispatch(Actions.nodeAction(action, state.nodes))
             return copyIfChanged(state, {nodes: 
                 updateNodeById(state.nodes, action.id, 
                     node => copy(node, {value: action.value})
                 )
             })
         case 'INSERT_NODE_AFTER':
-            dispatch(Actions.nodeAction(action, state.nodes))
             if (action.parent === null) {
                 return copy(state, {nodes: insertNewAfter(state.nodes, action.id)})
             }
@@ -109,15 +80,26 @@ new Store((state, action, dispatch) => {
                 })
             }
         case 'REMOVE_NODE':
-            dispatch(Actions.nodeAction(action, state.nodes))
             return copyIfChanged(state, {nodes: 
                 updateNodeById(state.nodes, action.id, 
                     node => null
                 )
             })
+        default:
+            return state
+    }
+})
+
+/* History actions */
+window.store.addReducer((state, action, dispatch) => {
+    switch (action.type) {
         case 'NODE_ACTION_EXECUTED':
             return copy(state, {
-                history: state.history.concat([ { action: action.action, before: action.state, after: state.nodes } ]),
+                history: state.history.concat([{ 
+                    action: action.action, 
+                    before: action.state, 
+                    after: state.nodes 
+                }]),
                 future: []
             })
         case 'HISTORY_UNDO': {
