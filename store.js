@@ -1,17 +1,27 @@
 
+function guid() {
+  let s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
+  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
+    s4() + '-' + s4() + s4() + s4();
+}
+
 window.Actions = {
+    // Node actions
     changeValue: (id, value) => ({
         type: 'CHANGE_NODE_VALUE',
         id, value
     }),
     insertAfter: (parent, id) => ({
         type: 'INSERT_NODE_AFTER',
-        parent, id
+        parent, 
+        after: id,
+        id: guid()
     }),
     removeNode: (id) => ({
         type: 'REMOVE_NODE',
         id
     }),
+    // History actions
     nodeAction: (action,state) => ({
         type: 'NODE_ACTION_EXECUTED',
         action, state
@@ -21,34 +31,50 @@ window.Actions = {
     }),
     redo: (n = 0) => ({
         type: 'HISTORY_REDO', n
+    }),
+    clearHistory: () => ({
+        type: 'HISTORY_CLEAR'
+    }),
+    // Server actions
+    dataReceived: (nodes, timestamp) => ({
+        type: 'SERVER_DATA_RECEIVED',
+        nodes, timestamp
+    }),
+    dataSaved: timestamp => ({
+        type: 'SERVER_DATA_SAVED',
+        timestamp
+    }),
+    onlineState: active => ({
+        type: 'SERVER_ONLINE_STATUS',
+        active
     })
 }
 
 let NODE_ACTIONS = ['CHANGE_NODE_VALUE','INSERT_NODE_AFTER','REMOVE_NODE']
 
-function guid() {
-  let s4 = () => Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1)
-  return s4() + s4() + '-' + s4() + '-' + s4() + '-' +
-    s4() + '-' + s4() + s4() + s4();
-}
-
-function node(value = '', content = []) {
+function node(id) {
     return {
-        id: guid(),
-        value, content
+        id,
+        value: '', 
+        content: []
     }
 }
 
-/**
- * State structure: list of blocks, each block is:
- * 	- id
- *	- value
- *	- content: list of blocks
- */
-window.store = new Store((state, action, dispatch) => (typeof state !== 'undefined') ? state : {
-    history: [],
-    future: [],
-    nodes: []
+window.server = new Server
+
+window.store = new Store((state, action, dispatch, defer) => {
+    if (typeof state !== 'undefined') 
+        return state
+    else {
+        defer(() => window.server.update())
+        return {
+            history: [],
+            future: [],
+            nodes: [],
+            active: true,
+            timestamp: null
+        }
+    }
 })
 
 /** Record node action initial state */
@@ -70,12 +96,12 @@ window.store.addReducer((state, action, dispatch) => {
             })
         case 'INSERT_NODE_AFTER':
             if (action.parent === null) {
-                return copy(state, {nodes: insertNewAfter(state.nodes, action.id)})
+                return copy(state, {nodes: insertNewAfter(state.nodes, action)})
             }
             else {
                 return copyIfChanged(state, {nodes: 
                     updateNodeById(state.nodes, action.parent,
-                        node => copy(node, {content: insertNewAfter(node.content, action.id)})
+                        node => copy(node, {content: insertNewAfter(node.content, action)})
                     )
                 })
             }
@@ -120,9 +146,50 @@ window.store.addReducer((state, action, dispatch) => {
                 future: state.future.slice(0,-action.n - 1)
             })
         }
+        case 'HISTORY_CLEAR':
+            return copy(state, {
+                history: [],
+                future: []
+            })
 		default:
 			return state
 	}
+})
+
+/* Server actions */
+window.store.addReducer((state, action, dispatch, defer) => {
+    switch (action.type) {
+        case 'SERVER_DATA_RECEIVED':
+            if (state.timestamp != action.timestamp) {
+                state.history.map(({action}) => dispatch(action))
+            }
+            return {
+                nodes: action.nodes,
+                history: [],
+                future: [],
+                active: state.active,
+                timestamp: action.timestamp
+            }
+        case 'SERVER_ONLINE_STATUS':
+            defer(() => window.server.update())
+            return copy(state, {
+                active: action.active
+            })
+        case 'SERVER_DATA_SAVED':
+            return copy(state, {
+                timestamp: action.timestamp,
+                history: [],
+                future: []
+            })
+        default:
+            return state
+    }
+})
+
+window.store.subscribe(state => {
+    if (state.active && state.history.length > 0) {
+        window.server.save(state.nodes, state.timestamp)
+    }
 })
 
 function copyIfChanged(obj, props) {
@@ -135,15 +202,15 @@ function copyIfChanged(obj, props) {
     return changed ? copy(obj, props) : obj
 }
 
-function insertNewAfter(nodes, id) {
-    var pos = id === null ? 0 : -1
+function insertNewAfter(nodes, {after,id}) {
+    var pos = (after === null) ? 0 : -1
     for (let i = 0; i < nodes.length; i++)
-        if (nodes[i].id === id) {
+        if (nodes[i].id === after) {
             pos = i + 1
             break
         }
     if (pos === -1) pos = nodes.length
-    return nodes.slice(0,pos).concat([ node() ]).concat(nodes.slice(pos))
+    return nodes.slice(0,pos).concat([ node(id) ]).concat(nodes.slice(pos))
 }
 
 function updateNodeById(nodes, id, change) {

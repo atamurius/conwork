@@ -139,11 +139,9 @@ class Toolbar extends React.Component {
 	constructor(props) {
 		super(props)
 		this.store = props.store
-		let {history,future} = this.store.state
-		this.state = {history,future}
+		this.state = this.store.state
 		props.store.subscribe(state => {
-			let {history,future} = state
-			this.setState({history,future})
+			this.setState(state)
 		})
 		this.actions = this.store.dispatcher(Actions)
 	}
@@ -158,7 +156,7 @@ class Toolbar extends React.Component {
 					Redo {this.state.future.length > 0 ? <span className="badge">{this.state.future.length}</span> : ''}
 					<Glyphicon glyph="chevron-right" /> 
 		  		</HistoryButton>
-			  	<OnlineButton online={true}/>
+			  	<OnlineButton online={this.state.active} update={this.actions.onlineState}/>
 		  	</ButtonToolbar>
 		)
 	}
