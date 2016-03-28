@@ -4,12 +4,17 @@
  * POST data, timestamp - posts data if timestamp is fresh
  */
 
+function lastModified($file) {
+	clearstatcache(true, $file);
+	$time = filemtime($file);
+	return gmdate("D, d M Y H:i:s \G\M\T", $time);
+}
+
 $file = 'data.json';
-clearstatcache(true, $file);
-$time = filemtime($file);
-$ftime = gmdate("D, d M Y H:i:s \G\M\T", $time);
+$ftime = lastModified($file);
 
 switch ($_SERVER['REQUEST_METHOD']) {
+
 	case 'GET':
 		header('Content-Type: text/json');
 		header("Last-Modified: ${ftime}");
@@ -18,6 +23,7 @@ switch ($_SERVER['REQUEST_METHOD']) {
 		fpassthru($f);
 
 		break;
+
 	case 'POST':
 		$headers = getallheaders();
 		$version = $headers['Last-Modified'];
@@ -26,12 +32,11 @@ switch ($_SERVER['REQUEST_METHOD']) {
 		}
 		else {
 			file_put_contents($file, $_POST['nodes']);
-			clearstatcache(true, $file);
-			$time = filemtime($file);
-			$ftime = gmdate("D, d M Y H:i:s \G\M\T", $time);
+			$ftime = lastModified($file);
 			header("Last-Modified: ${ftime}");
 		}
 		break;
+
 	default:
 		http_response_code(404);
 }

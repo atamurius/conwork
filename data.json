@@ -1,1 +1,23 @@
-[{"id":"868e9f64-fcf3-b4f8-005c-57a1fd6521a9","value":"Test node content is better than nothing.","content":[{"id":"084d5a41-7701-6f2d-7970-0573984f1ded","value":"Child node.","content":[]},{"id":"5e697327-17e8-3449-0e41-cc60822cf63a","value":"Child node 2","content":[]}]},{"id":"adfdb786-61f5-bd5a-e0a9-694ed12bbd62","value":"Node A","content":[]},{"id":"e58ed74d-237a-4f64-e1ee-3748e0845337","value":"NEW NODE!","content":[]},{"id":"454ad155-4e3f-959f-1938-87793212f143","value":"Node B","content":[]}]
+[
+  {
+    "id": "5dce716f-ffe5-88cd-f077-fd2e4b19c5fc",
+    "value": "First element",
+    "content": [
+      {
+        "id": "431bf49c-cfe7-30f2-b2c5-2db86f0ce625",
+        "value": "Sub element",
+        "content": []
+      }
+    ]
+  },
+  {
+    "id": "61626bfc-2044-f624-95f4-55bd340d8f31",
+    "value": "Second element",
+    "content": []
+  },
+  {
+    "id": "862359e6-49bb-6915-d3b8-f45d7699e62a",
+    "value": "Third element",
+    "content": []
+  }
+]

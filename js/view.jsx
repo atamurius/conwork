@@ -97,7 +97,7 @@ class Root extends React.Component {
 		this.store = props.store
 		this.state = props.store.state
 		props.store.subscribe(this.setState.bind(this))
-		this.actions = this.store.dispatcher(Actions)
+		this.actions = props.actions
 	}
 	render() {
 		return (
@@ -128,14 +128,14 @@ let describeAction = act => {
 }
 
 let HistoryButton = ({events,onClick,children}) => (
-	<SplitButton disabled={events.length == 0} title={children} bsSize="small" onClick={() => onClick(0)}>
+	<SplitButton disabled={events.length == 0} title={children} bsSize="small" onClick={() => onClick(0)} id="history">
 		{events.slice().reverse().map((e,i) => 
 			<MenuItem key={i} onClick={() => onClick(i)}>{describeAction(e.action)}</MenuItem>
 		)}
 	</SplitButton>
 )
 
-class Toolbar extends React.Component {
+class Header extends React.Component {
 	constructor(props) {
 		super(props)
 		this.store = props.store
@@ -143,32 +143,34 @@ class Toolbar extends React.Component {
 		props.store.subscribe(state => {
 			this.setState(state)
 		})
-		this.actions = this.store.dispatcher(Actions)
+		this.actions = props.actions
 	}
 	render() {
 		return (
+		  <PageHeader>
+		  	Concurrent page editor
+		  	<small style={{fontSize: 12}}>{this.state.timestamp}</small>
 		  	<ButtonToolbar className="pull-right">
 		  		<HistoryButton events={this.state.history} onClick={this.actions.undo}>
-					<Glyphicon glyph="chevron-left" /> 
+					<Glyphicon glyph="chevron-left" id="undo" /> 
 					Undo {this.state.history.length > 0 ? <span className="badge">{this.state.history.length}</span> : ''}
 		  		</HistoryButton>
 		  		<HistoryButton events={this.state.future} onClick={this.actions.redo}>
 					Redo {this.state.future.length > 0 ? <span className="badge">{this.state.future.length}</span> : ''}
-					<Glyphicon glyph="chevron-right" /> 
+					<Glyphicon glyph="chevron-right" id="redo" /> 
 		  		</HistoryButton>
 			  	<OnlineButton online={this.state.active} update={this.actions.onlineState}/>
 		  	</ButtonToolbar>
+		  </PageHeader>	
 		)
 	}
 }
 
+
 const body = (
 	<div>
-	  <PageHeader>
-	  	Concurrent page editor
-	  	<Toolbar store={store}/>
-	  </PageHeader>
-	  <Root store={store}/>
+	  <Header store={store} actions={actions}/>
+	  <Root store={store} actions={actions}/>
     </div>
 )
 
