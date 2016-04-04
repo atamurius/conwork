@@ -112,9 +112,15 @@ let describeAction = act => {
 }
 
 let HistoryButton = ({events,onClick,children}) => (
-	<SplitButton disabled={events.length == 0} title={children} bsSize="small" onClick={() => onClick(0)} id="history">
+	<SplitButton disabled={!events.find(e => !e.freezed)} 
+				 title={children} 
+				 bsSize="small" 
+				 onClick={() => onClick(0)} 
+				 id="history">
 		{events.slice().reverse().map((e,i) => 
-			<MenuItem key={i} onClick={() => onClick(i)}>{describeAction(e.action)}</MenuItem>
+			<MenuItem disabled={e.freezed} key={i} onClick={() => onClick(i)}>
+				{describeAction(e.action)}
+			</MenuItem>
 		)}
 	</SplitButton>
 )

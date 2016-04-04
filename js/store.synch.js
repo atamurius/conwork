@@ -20,6 +20,9 @@ function save(store, nodes, timestamp) {
 		},
 		error: (xhr, status, httpError) => {
 			console.log(httpError)
+			window.setTimeout(() =>
+				store.dispatch(SynchModule.actions.dataSaveRetry()),
+				1000)
 		}
 	})
 }
@@ -40,7 +43,10 @@ window.SynchModule = {
 	    onlineState: active => ({
 	        type: 'SERVER_ONLINE_STATUS',
 	        active
-	    })	
+	    }),
+	    dataSaveRetry: () => ({
+	    	type: 'SERVER_RETRY_SAVE'
+	    })
 	},
 	updateProcess: null,
 	update: function(store) {
@@ -53,10 +59,6 @@ window.SynchModule = {
 		}
 	},
 	reducer: function(state, action, dispatch) {
-		let updated = state.history.length > 0
-		if (state.active && updated) {
-			save(this, state.nodes, state.timestamp)
-		}
 	    switch (action.type) {
 
 	        case 'SERVER_DATA_RECEIVED':
@@ -76,8 +78,10 @@ window.SynchModule = {
             	return state
 
 	        case 'SERVER_ONLINE_STATUS':
-	        	if (action.active)
+	        	if (action.active) {
             		dispatch(SynchModule.actions.dataLoad())
+            		dispatch(SynchModule.actions.dataSaveRetry())
+	        	}
             	else
             		SynchModule.update(null)
             	
@@ -88,11 +92,18 @@ window.SynchModule = {
 	        case 'SERVER_DATA_SAVED':
 	            return iUpdate(state, {
 	                timestamp: action.timestamp,
-	                history: [],
-	                future: []
+	                history: state.history.filter(h => ! h.freezed)
 	            })
 
 	        default:
+	        	let forceUpdate = (action.type == 'SERVER_RETRY_SAVE')
+				let updated = state.history.length > 0 && ! state.history[0].freezed
+				if (state.active && (updated || forceUpdate)) {
+					save(this, state.nodes, state.timestamp)
+					return iUpdate(state, {
+						history: state.history.map(h => iUpdate(h,{freezed:true}))
+					})
+				}
 	            return state
 	    }
 	}
