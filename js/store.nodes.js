@@ -8,20 +8,17 @@ window.NodesModule = {
 	actions: {
 		changeValue: (id, value) => ({
 		    type: 'CHANGE_NODE_VALUE',
-		    persistentAction: true,
 		    id: id, 
 		    value: value
 		}),
 		insertAfter: (parent, id) => ({
 		    type: 'INSERT_NODE_AFTER',
-		    persistentAction: true,
 		    parent: parent, 
 		    after: id,
 		    id: guid()
 		}),
 		removeNode: (id) => ({
 		    type: 'REMOVE_NODE',
-		    persistentAction: true,
 		    id: id
 		})
 	},
