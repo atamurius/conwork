@@ -1,35 +1,28 @@
-class Server {
-	resume() {
-		this.update(this.store)
-	}
-    update(store) {
-    	this.store = store
-        $.get('server.php?'+ Math.random(), (nodes, status, xhr) => {
-            let state = store.getState()
-            let timestamp = xhr.getResponseHeader('Last-Modified')
-            if (state.timestamp !== timestamp) {
-                store.dispatch(SynchModule.actions.dataReceived(nodes, timestamp))
-            }
-            if (state.active)
-                window.setTimeout(() => this.update(store), 1000)
-        })
-    }
-    save(store, nodes, timestamp) {
-    	$.post({
-    		url: 'server.php', 
-    		data: {nodes: JSON.stringify(nodes,null,2)}, 
-    		headers: {
-    			"Last-Modified": timestamp
-    		},
-    		success: (res, status, xhr) => {
-    			store.dispatch(SynchModule.actions.
-    				dataSaved(xhr.getResponseHeader('Last-Modified')))
-    		}
-    	})
-    }
+function update(store) {
+	$.get('server.php?'+ Math.random(), (nodes, status, xhr) => {
+        let state = store.getState()
+        let timestamp = xhr.getResponseHeader('Last-Modified')
+        if (state.timestamp !== timestamp) {
+            store.dispatch(SynchModule.actions.dataReceived(nodes, timestamp))
+        }
+    })
 }
-
-var server = new Server
+function save(store, nodes, timestamp) {
+	$.post({
+		url: 'server.php', 
+		data: {nodes: JSON.stringify(nodes,null,2)}, 
+		headers: {
+			"Last-Modified": timestamp
+		},
+		success: (res, status, xhr) => {
+			store.dispatch(SynchModule.actions.
+				dataSaved(xhr.getResponseHeader('Last-Modified')))
+		},
+		error: (xhr, status, httpError) => {
+			console.log(httpError)
+		}
+	})
+}
 
 window.SynchModule = {
 	actions: {
@@ -41,13 +34,29 @@ window.SynchModule = {
 	        type: 'SERVER_DATA_SAVED',
 	        timestamp
 	    }),
+	    dataLoad: () => ({
+	    	type: 'SERVER_LOAD_DATA'
+	    }),
 	    onlineState: active => ({
 	        type: 'SERVER_ONLINE_STATUS',
 	        active
 	    })	
 	},
-	server: server,
-	reducer: (state, action, dispatch, defer) => {
+	updateProcess: null,
+	update: function(store) {
+		if (store && ! this.updateProcess) {
+			this.updateProcess = window.setInterval(() => update(store), 1000)
+		}
+		else if (! store && this.updateProcess) {
+			window.clearInterval(this.updateProcess)
+			this.updateProcess = null
+		}
+	},
+	reducer: function(state, action, dispatch) {
+		let updated = state.history.length > 0
+		if (state.active && updated) {
+			save(this, state.nodes, state.timestamp)
+		}
 	    switch (action.type) {
 
 	        case 'SERVER_DATA_RECEIVED':
@@ -62,8 +71,16 @@ window.SynchModule = {
 	                timestamp: action.timestamp
 	            }
 
+            case 'SERVER_LOAD_DATA':
+            	SynchModule.update(this)
+            	return state
+
 	        case 'SERVER_ONLINE_STATUS':
-	            defer(() => server.resume())
+	        	if (action.active)
+            		dispatch(SynchModule.actions.dataLoad())
+            	else
+            		SynchModule.update(null)
+            	
 	            return iUpdate(state, {
 	                active: action.active
 	            })

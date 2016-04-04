@@ -1,61 +1,24 @@
 window.Store = 
 // Store manages state and dispatches actions on it
 class Store {
-	constructor(initialState) {
-		this.reducer = (state, action, dispatch, defer) => state
+	constructor(initialState, ...reducers) {
 		this.state = initialState
-		this.queue = []
-		this.dispatching = false
-		this.listeners = []
+		this.listeners = new Observable
+		this.reducers = reducers
+		this.dispatch = queued(this.dispatch)
 	}
 	getState() {
 		return this.state
 	}
-	addReducer(next) {
-		let current = this.reducer
-		this.reducer = (state, action, dispatch, defer) => {
-			let currentState = current(state, action, dispatch, defer)
-			return next(currentState, action, dispatch, defer)
-		}
-	}
 	dispatch(action) {
-		this.queue.push(action);
-		this.process();
+		this.state = this.reducers.
+			reduce((state, f) => f.call(this, state, action, this.dispatch.bind(this)),
+				this.state)
+		this.logAction(action)
+		this.listeners.notify(this, this.state, action)
 	}
-	dispatcher(f) {
-		if (typeof f === 'object') {
-			let res = {}
-			for (let p in f) {
-				res[p] = this.dispatcher(f[p])
-			}
-			return res
-		}
-		else {
-			let store = this
-			return function() {
-				store.dispatch(f.apply(null,arguments))
-			}
-		}
-	}
-	process() {
-		if (! this.dispatching) {
-			this.dispatching = true;
-			let dispatch = this.dispatch.bind(this);
-			let deferred = []
-			let defer = f => deferred.push(f)
-			try {
-				while (this.queue.length) {
-					let action = this.queue.shift();
-					this.state = this.reducer(this.state, action, dispatch, defer);
-					this.logAction(action)
-				}
-			}
-			finally {
-				this.dispatching = false;
-				this.notify();
-				deferred.map(f => f())
-			}
-		}
+	bindAction(action) {
+		return (...args) => this.dispatch(action.apply(null,args))
 	}
 	logAction(action) {
 		if (action) {
@@ -68,9 +31,40 @@ class Store {
 		console.groupEnd();
 	}
 	subscribe(f) {
-		this.listeners.push(f);
+		this.listeners.subscribe(f);
 	}
-	notify() {
-		this.listeners.map(f => f(this.state));
+}
+
+function queued(f) {
+	let id = 'queued'+ Math.random(),
+		queue = id +'_queue'
+	return function(...args) {
+		if (typeof this[id] === 'undefined') {
+			this[id] = false
+			this[queue] = []
+		}
+		this[queue].push(args)
+		if (! this[id]) {
+			this[id] = true
+			try {
+				while (this[queue].length > 0)
+					f.apply(this, this[queue].shift())
+			}
+			finally {
+				this[id] = false
+			}
+		}
+	}
+}
+
+class Observable {
+	constructor() {
+		this.observers = []
+	}
+	subscribe(observer) {
+		this.observers.push(observer);
+	}
+	notify(source, ...args) {
+		this.observers.map(observer => observer.apply(source, args))
 	}
 }

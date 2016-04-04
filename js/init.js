@@ -1,26 +1,25 @@
-window.store = new Store({
-    history: [],
-    future: [],
-    nodes: [],
-    active: true,
-    timestamp: null        
-})
-window.actions = window.store.dispatcher(iMerge([
-    window.NodesModule.actions,
-    window.HistoryModule.actions,
-    window.SynchModule.actions
-]))
+let store = new Store(
+    {
+        history: [],
+        future: [],
+        nodes: [],
+        active: true,
+        timestamp: null        
+    },
+    HistoryModule.reducer,
+    NodesModule.reducer,
+    SynchModule.reducer
+)
+store.dispatch(SynchModule.actions.dataLoad())
 
-window.store.addReducer(window.HistoryModule.preReducer)
-window.store.addReducer(window.NodesModule.reducer)
-window.store.addReducer(window.HistoryModule.postReducer)
-window.store.addReducer(window.SynchModule.reducer)
+let actions = {},
+    modules = [HistoryModule,NodesModule,SynchModule]
 
-$(() => {
-    window.SynchModule.server.update(window.store)
-    window.store.subscribe(state => {
-        if (state.active && state.history.length > 0) {
-            window.SynchModule.server.save(window.store, state.nodes, state.timestamp)
-        }
-    })
+modules.map(module => {
+    for (let act in module.actions) {
+        let action = module.actions[act]
+        actions[act] = store.bindAction(action)
+    }
 })
+
+ReactDOM.render(React.createElement(PageView, {store, actions}), document.getElementById('content-root'))

@@ -11,13 +11,10 @@ window.HistoryModule = {
 	        type: 'HISTORY_REDO', n
 	    })
 	},
-	preReducer: (state, action, dispatch) => {
+	reducer: (state, action, dispatch) => {
 	    if (action.persistentAction) {
 	        dispatch(HistoryModule.actions.nodeAction(action,state.nodes))
 	    }
-	    return state
-	},
-	postReducer: (state, action, dispatch) => {
 	    switch (action.type) {
 
 	        case 'NODE_ACTION_EXECUTED':

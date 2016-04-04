@@ -25,7 +25,7 @@ window.NodesModule = {
 		    id: id
 		})
 	},
-	reducer: (state, action, dispatch) => {
+	reducer: (state, action) => {
 		switch (action.type) {
 
 	        case 'CHANGE_NODE_VALUE':

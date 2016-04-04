@@ -91,22 +91,6 @@ let Block = ({block,actions}) => (
 	</div>
 )
 
-class Root extends React.Component {
-	constructor(props) {
-		super(props)
-		this.store = props.store
-		this.state = props.store.state
-		props.store.subscribe(this.setState.bind(this))
-		this.actions = props.actions
-	}
-	render() {
-		return (
-			<Items blocks={this.state.nodes} actions={this.actions} id={null}/>
-		)
-	}
-}
-
-
 let OnlineButton = ({online,update}) => (
 	<Button bsSize="small" 
 		    onClick={() => update(! online)}
@@ -135,43 +119,36 @@ let HistoryButton = ({events,onClick,children}) => (
 	</SplitButton>
 )
 
-class Header extends React.Component {
+let Header = ({state,actions}) => (
+	  <PageHeader>
+	  	Concurrent page editor
+	  	<small style={{fontSize: 12}}>{state.timestamp}</small>
+	  	<ButtonToolbar className="pull-right">
+	  		<HistoryButton events={state.history} onClick={actions.undo}>
+				<Glyphicon glyph="chevron-left" id="undo" /> 
+				Undo {state.history.length > 0 ? <span className="badge">{state.history.length}</span> : ''}
+	  		</HistoryButton>
+	  		<HistoryButton events={state.future} onClick={actions.redo}>
+				Redo {state.future.length > 0 ? <span className="badge">{state.future.length}</span> : ''}
+				<Glyphicon glyph="chevron-right" id="redo" /> 
+	  		</HistoryButton>
+		  	<OnlineButton online={state.active} update={actions.onlineState}/>
+	  	</ButtonToolbar>
+	  </PageHeader>	
+)
+
+window.PageView = class PageView extends React.Component {
 	constructor(props) {
 		super(props)
-		this.store = props.store
-		this.state = this.store.state
-		props.store.subscribe(state => {
-			this.setState(state)
-		})
-		this.actions = props.actions
+		this.state = props.store.getState()
+		props.store.subscribe(state => this.setState(state))
 	}
 	render() {
 		return (
-		  <PageHeader>
-		  	Concurrent page editor
-		  	<small style={{fontSize: 12}}>{this.state.timestamp}</small>
-		  	<ButtonToolbar className="pull-right">
-		  		<HistoryButton events={this.state.history} onClick={this.actions.undo}>
-					<Glyphicon glyph="chevron-left" id="undo" /> 
-					Undo {this.state.history.length > 0 ? <span className="badge">{this.state.history.length}</span> : ''}
-		  		</HistoryButton>
-		  		<HistoryButton events={this.state.future} onClick={this.actions.redo}>
-					Redo {this.state.future.length > 0 ? <span className="badge">{this.state.future.length}</span> : ''}
-					<Glyphicon glyph="chevron-right" id="redo" /> 
-		  		</HistoryButton>
-			  	<OnlineButton online={this.state.active} update={this.actions.onlineState}/>
-		  	</ButtonToolbar>
-		  </PageHeader>	
-		)
-	}
+			<div>
+			  <Header state={this.state} actions={this.props.actions}/>
+			  <Items blocks={this.state.nodes} actions={this.props.actions} id={null}/>
+		    </div>
+	    )
+    }
 }
-
-
-const body = (
-	<div>
-	  <Header store={store} actions={actions}/>
-	  <Root store={store} actions={actions}/>
-    </div>
-)
-
-ReactDOM.render(body, document.getElementById('content-root'))
